@@ -1,61 +1,1039 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Study Quiz - Excel in Your Exams</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+Arabic:wght@400;700&display=swap"
-      rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+Arabic:wght@400;700&display=swap"
+        rel="stylesheet"
     />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  </head>
-  <body>
+    <style>
+        /* CSS إضافي للتصنيف والبطاقات التعليمية */
+        :root {
+            --category-database: #3b82f6;
+            --category-modeling: #10b981;
+            --category-design: #8b5cf6;
+            --category-physical: #f59e0b;
+            --category-theory: #ef4444;
+        }
+
+        .controls-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .filter-btn:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active {
+            background: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+        }
+
+        .category-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+            color: white;
+        }
+
+        .category-database { background: var(--category-database); }
+        .category-modeling { background: var(--category-modeling); }
+        .category-design { background: var(--category-design); }
+        .category-physical { background: var(--category-physical); }
+        .category-theory { background: var(--category-theory); }
+
+        .question-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .difficulty {
+            display: flex;
+            gap: 5px;
+        }
+
+        .difficulty-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #cbd5e1;
+        }
+
+        .difficulty-dot.active {
+            background: #f59e0b;
+        }
+
+        .flashcard-container {
+            perspective: 1000px;
+            margin: 20px 0;
+        }
+
+        .flashcard {
+            width: 100%;
+            min-height: 300px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s;
+            cursor: pointer;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .flashcard-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .flashcard-back {
+            background: white;
+            color: #1e293b;
+            transform: rotateY(180deg);
+            text-align: center;
+        }
+
+        .flashcard-question {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .flashcard-instruction {
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .flashcard-answer {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #4f46e5;
+        }
+
+        .flashcard-explanation {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #475569;
+        }
+
+        .study-modes {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            border: 2px solid #4f46e5;
+            background: transparent;
+            color: #4f46e5;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn:hover {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .mode-btn.active {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .question-counter {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 10px;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: #4f46e5;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #4338ca;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card h4 {
+            margin: 0 0 8px 0;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .highlight-correct {
+            background: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .highlight-incorrect {
+            background: linear-gradient(120deg, #ff9a9e 0%, #fad0c4 100%);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .controls-panel {
+                flex-direction: column;
+            }
+            
+            .filter-buttons {
+                justify-content: center;
+            }
+            
+            .flashcard-front, .flashcard-back {
+                padding: 20px;
+            }
+            
+            .flashcard-question {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
     <div class="glass-bg"></div>
 
     <header>
-      <div class="header-content">
-        <h1>Study <span class="accent">Quiz</span></h1>
-        <div class="stats">
-          <div class="search-box">
-            <input
-              type="text"
-              id="quiz-search"
-              placeholder="Search questions/explanations..."
-            />
-          </div>
-          <div class="stat-item">
-            <span class="label">Score:</span>
-            <span id="score" class="value">0</span>
-          </div>
-          <div class="stat-item">
-            <span class="label">Progress:</span>
-            <span class="value"
-              ><span id="current-index">0</span>/<span id="total">0</span></span
-            >
-          </div>
+        <div class="header-content">
+            <h1>Study <span class="accent">Quiz</span></h1>
+            <div class="stats">
+                <div class="search-box">
+                    <input
+                        type="text"
+                        id="quiz-search"
+                        placeholder="Search questions/explanations..."
+                    />
+                </div>
+                <div class="stat-item">
+                    <span class="label">Score:</span>
+                    <span id="score" class="value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Progress:</span>
+                    <span class="value"
+                        ><span id="current-index">0</span>/<span id="total">0</span></span
+                    >
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="progress-container">
-        <div id="progress-bar" class="progress-bar"></div>
-      </div>
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
     </header>
 
     <main>
-      <div id="feedback-message" class="feedback-message"></div>
-      <div id="explanation-box" class="explanation-box"></div>
-      <div id="quiz-container" class="card">
-        <div class="loader">Loading your study experience...</div>
-      </div>
+        <div class="controls-panel">
+            <div class="study-modes">
+                <button id="mode-quiz" class="mode-btn active"><i class="fas fa-list"></i> Quiz Mode</button>
+                <button id="mode-flashcard" class="mode-btn"><i class="fas fa-layer-group"></i> Flashcards</button>
+            </div>
+            
+            <div style="flex-grow: 1;"></div>
+            
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All Questions</button>
+                <button class="filter-btn" data-filter="true-false">True/False</button>
+                <button class="filter-btn" data-filter="multiple-choice">Multiple Choice</button>
+                <button class="filter-btn" data-filter="database">Database Concepts</button>
+                <button class="filter-btn" data-filter="modeling">Data Modeling</button>
+                <button class="filter-btn" data-filter="design">DB Design</button>
+                <button class="filter-btn" data-filter="physical">Physical Design</button>
+            </div>
+        </div>
+
+        <div class="quick-stats" id="stats-container">
+            <div class="stat-card">
+                <h4>Total Questions</h4>
+                <div class="value" id="total-questions">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Answered</h4>
+                <div class="value" id="answered-questions">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Correct Rate</h4>
+                <div class="value" id="correct-rate">0%</div>
+            </div>
+            <div class="stat-card">
+                <h4>Current Category</h4>
+                <div class="value" id="current-category">All</div>
+            </div>
+        </div>
+
+        <div id="feedback-message" class="feedback-message"></div>
+        
+        <!-- وضع البطاقات التعليمية -->
+        <div id="flashcard-mode" class="card" style="display: none;">
+            <div class="flashcard-container">
+                <div id="flashcard" class="flashcard">
+                    <div class="flashcard-front">
+                        <div class="question-meta">
+                            <span id="flashcard-category" class="category-tag category-database">Database</span>
+                            <div class="difficulty" id="flashcard-difficulty">
+                                <span class="difficulty-dot"></span>
+                                <span class="difficulty-dot"></span>
+                                <span class="difficulty-dot"></span>
+                            </div>
+                        </div>
+                        <div class="flashcard-question" id="flashcard-question-text">
+                            Click to flip the card
+                        </div>
+                        <div class="flashcard-instruction">
+                            <i class="fas fa-hand-point-up"></i> Click to reveal answer
+                        </div>
+                    </div>
+                    <div class="flashcard-back">
+                        <div class="flashcard-answer" id="flashcard-answer"></div>
+                        <div class="flashcard-explanation" id="flashcard-explanation"></div>
+                        <div class="question-counter" id="flashcard-counter"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="navigation-buttons">
+                <button id="prev-card" class="nav-btn"><i class="fas fa-arrow-left"></i> Previous</button>
+                <button id="next-card" class="nav-btn">Next <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- وضع الكويز العادي -->
+        <div id="quiz-mode">
+            <div id="explanation-box" class="explanation-box"></div>
+            <div id="quiz-container" class="card">
+                <div class="loader">Loading your study experience...</div>
+            </div>
+        </div>
     </main>
 
     <footer>
-      <p>&copy; 2025 Study Buddy - Practice makes perfect! 💪</p>
+        <p>&copy; 2025 Study Buddy - Practice makes perfect! 💪</p>
     </footer>
 
-    <script src="script.js"></script>
-  </body>
+    <script>
+        // البيانات من ملف PDF
+        const trueFalseQuestions = [
+            // الصفحة 1
+            { id: 1, text: "Information is processed data.", answer: "T", explanation: "Information is derived from data through processing.", category: "theory", difficulty: 1 },
+            { id: 2, text: "Metadata are data that describe the properties of other data.", answer: "T", explanation: "Metadata provides context and description for data.", category: "database", difficulty: 1 },
+            { id: 3, text: "Databases were developed as the first application of computers to data processing.", answer: "F", explanation: "File processing systems came before databases.", category: "database", difficulty: 2 },
+            { id: 4, text: "File processing systems have been replaced by database systems in most critical business applications today.", answer: "T", explanation: "Database systems are now standard for critical applications.", category: "database", difficulty: 1 },
+            { id: 5, text: "Unplanned duplicate data files are the rule rather than the exception in file processing systems.", answer: "T", explanation: "Lack of integration leads to data duplication in file systems.", category: "database", difficulty: 2 },
+            { id: 6, text: "Organizations that utilize the file processing approach spend only 20 percent of development time on maintenance.", answer: "F", explanation: "File systems often require more maintenance due to redundancy and inconsistency.", category: "database", difficulty: 2 },
+            { id: 7, text: "Many of the disadvantages of file processing systems can also be limitations of databases.", answer: "T", explanation: "Some issues like data quality can persist even in database systems.", category: "database", difficulty: 3 },
+            { id: 8, text: "With the traditional file processing approach, each application shares data files, thus enabling much data sharing.", answer: "F", explanation: "File systems typically have limited data sharing between applications.", category: "database", difficulty: 2 },
+            { id: 9, text: "Development starts from scratch with the traditional file processing approach because new file formats, descriptions, and file access logic must be designed for each new program.", answer: "T", explanation: "Each program in file systems requires its own data definitions and access methods.", category: "database", difficulty: 2 },
+            { id: 10, text: "A data model is a graphical system used to capture the nature and relationships among data.", answer: "F", explanation: "A data model can be graphical or textual, not exclusively graphical.", category: "modeling", difficulty: 2 },
+            { id: 11, text: "A well-structured database establishes the entities between relationships in order to derive the desired information.", answer: "F", explanation: "Databases establish relationships between entities, not entities between relationships.", category: "modeling", difficulty: 3 },
+            { id: 12, text: "A person is an example of an entity.", answer: "T", explanation: "An entity is any person, place, object, event, or concept about which data is stored.", category: "modeling", difficulty: 1 },
+            { id: 13, text: "The data that you are interested in capturing about an entity is called an instance.", answer: "F", explanation: "The data captured about an entity are its attributes, not an instance.", category: "modeling", difficulty: 2 },
+            { id: 14, text: "A relational database establishes the relationships between entities by means of a common field.", answer: "T", explanation: "Relational databases use common fields (foreign keys) to establish relationships.", category: "design", difficulty: 1 },
+            { id: 15, text: "Separation of metadata from application programs that use the data is called data independence.", answer: "T", explanation: "Data independence means applications are insulated from changes in data structure.", category: "database", difficulty: 2 },
+            { id: 16, text: "Data redundancy is used to establish relationships between data but is never used to improve database performance.", answer: "F", explanation: "Controlled redundancy can sometimes improve performance in databases.", category: "design", difficulty: 3 },
+            { id: 17, text: "The E-R model is used to construct a conceptual model.", answer: "T", explanation: "E-R modeling is a conceptual design technique.", category: "modeling", difficulty: 1 },
+            { id: 18, text: "A business rule is a statement that defines or constrains some aspect of the business.", answer: "T", explanation: "Business rules guide business operations and data integrity.", category: "modeling", difficulty: 1 },
+            { id: 19, text: "One of the roles of a database analyst is to identify and understand rules that govern data.", answer: "T", explanation: "Database analysts must understand business rules that affect data.", category: "modeling", difficulty: 1 },
+            { id: 20, text: "The intent of a business rule is to break down business structure.", answer: "F", explanation: "Business rules define and support business structure, not break it down.", category: "modeling", difficulty: 2 },
+            { id: 21, text: "Enforcement of business rules can be automated through the use of software tools that can interpret the rules and enforce them.", answer: "T", explanation: "Many business rules can be enforced through database constraints and application logic.", category: "modeling", difficulty: 2 },
+            { id: 23, text: "When systems are automatically generated and maintained, quality is diminished.", answer: "F", explanation: "Automation can improve consistency and quality when properly implemented.", category: "design", difficulty: 2 },
+            { id: 24, text: "A business rule is a statement of how a policy is enforced or conducted.", answer: "T", explanation: "Business rules operationalize business policies.", category: "modeling", difficulty: 1 },
+            { id: 25, text: "While business rules are not redundant, a business rule can refer to another business rule.", answer: "T", explanation: "Business rules can build upon or reference other rules.", category: "modeling", difficulty: 2 },
+            { id: 26, text: "A business rule should be internally consistent.", answer: "T", explanation: "Consistency is essential for effective business rules.", category: "modeling", difficulty: 1 },
+            { id: 27, text: "Business rules are formulated from a collection of business ramblings.", answer: "F", explanation: "Business rules are derived from structured analysis of business requirements.", category: "modeling", difficulty: 1 },
+            { id: 28, text: "Data names should always relate to business characteristics.", answer: "T", explanation: "Data names should reflect business terminology for clarity.", category: "modeling", difficulty: 1 },
+            { id: 29, text: "An example of a term would be the following sentence: 'A student registers for a course.'", answer: "F", explanation: "That sentence describes a fact or relationship, not a single term.", category: "modeling", difficulty: 2 },
+            { id: 30, text: "A fact is an association between two or more terms.", answer: "T", explanation: "Facts represent relationships between business terms.", category: "modeling", difficulty: 1 },
+            // الصفحة 2
+            { id: 31, text: "A good data definition is always accompanied by diagrams, such as the entity-relationship diagram.", answer: "F", explanation: "While diagrams are helpful, they are not always required for a good data definition.", category: "modeling", difficulty: 2 },
+            { id: 32, text: "An entity is a person, place, object, event, or concept in the user environment about which the organization wishes to maintain data.", answer: "T", explanation: "This is the standard definition of an entity in data modeling.", category: "modeling", difficulty: 1 },
+            { id: 33, text: "A single occurrence of an entity is called an entity instance.", answer: "T", explanation: "Entity instance represents a specific occurrence of an entity type.", category: "modeling", difficulty: 1 },
+            { id: 34, text: "A subtype is a generic entity that has a relationship with one or more entities at a lower level.", answer: "F", explanation: "A subtype is a more specific entity, not a generic one.", category: "modeling", difficulty: 2 },
+            { id: 35, text: "An entity instance of a subtype represents the same entity instance of the supertype.", answer: "T", explanation: "A subtype instance is also an instance of its supertype.", category: "modeling", difficulty: 2 },
+            { id: 36, text: "A member of a subtype does NOT necessarily have to be a member of the supertype.", answer: "F", explanation: "By definition, all subtype members are also members of the supertype.", category: "modeling", difficulty: 3 },
+            { id: 37, text: "Supertype/subtype relationships should be used when the instances of a subtype participate in no relationships which are unique to that subtype.", answer: "F", explanation: "Subtypes are used precisely when there are unique attributes or relationships.", category: "modeling", difficulty: 3 },
+            { id: 38, text: "One of the major challenges in data modeling is to recognize and clearly represent entities that are almost the same.", answer: "T", explanation: "Distinguishing similar entities is important for accurate modeling.", category: "modeling", difficulty: 2 },
+            { id: 39, text: "The total specialization rule states that an entity instance of a supertype is allowed not to belong to any subtype.", answer: "F", explanation: "Total specialization requires every supertype instance to belong to at least one subtype.", category: "modeling", difficulty: 3 },
+            { id: 40, text: "Generalization is a top-down process.", answer: "F", explanation: "Generalization is a bottom-up process of extracting common characteristics.", category: "modeling", difficulty: 2 },
+            { id: 41, text: "A completeness constraint may specify that each entity of the supertype must be a member of some subtype in the relationship.", answer: "T", explanation: "This describes total specialization, a type of completeness constraint.", category: "modeling", difficulty: 3 },
+            { id: 42, text: "When the total specialization rule is set for a supertype/subtype relationship, one could roughly compare the supertype to an abstract class in object-oriented programming.", answer: "T", explanation: "Both represent general concepts that are not instantiated directly.", category: "modeling", difficulty: 3 },
+            { id: 43, text: "The disjoint rule specifies that if an entity instance of the supertype is a member of one subtype, it MUST simultaneously be a member of another subtype.", answer: "F", explanation: "Disjoint rule means an instance can belong to only one subtype at a time.", category: "modeling", difficulty: 3 },
+            { id: 44, text: "Data structures include data organized in the form of tables with rows and columns.", answer: "T", explanation: "Tables are a common data structure in relational databases.", category: "design", difficulty: 1 },
+            { id: 45, text: "A composite key consists of only one attribute.", answer: "F", explanation: "A composite key consists of two or more attributes.", category: "design", difficulty: 1 },
+            { id: 46, text: "A primary key is an attribute that uniquely identifies each row in a relation.", answer: "T", explanation: "This is the definition of a primary key.", category: "design", difficulty: 1 },
+            { id: 47, text: "A foreign key is a primary key of a relation that also is a primary key in another relation.", answer: "F", explanation: "A foreign key in one relation is a primary key in another relation.", category: "design", difficulty: 2 },
+            { id: 48, text: "Sample data are useful for developing prototype applications and for testing queries.", answer: "T", explanation: "Sample data helps in development and testing phases.", category: "design", difficulty: 1 },
+            { id: 49, text: "An enterprise key is a foreign key whose value is unique across all relations.", answer: "T", explanation: "Enterprise keys provide global uniqueness in distributed databases.", category: "design", difficulty: 3 },
+            { id: 50, text: "One property of a relation is that each attribute within a relation has a unique name.", answer: "T", explanation: "Attribute names must be unique within a relation.", category: "design", difficulty: 1 },
+            { id: 51, text: "There can be multivalued attributes in a relation.", answer: "F", explanation: "Relations in normalized databases cannot have multivalued attributes.", category: "design", difficulty: 2 },
+            { id: 52, text: "The columns of a relation can be interchanged without changing the meaning or use of the relation.", answer: "T", explanation: "Column order is not significant in relational theory.", category: "design", difficulty: 2 },
+            { id: 53, text: "Unlike columns, the rows of a relation may not be interchanged and must be stored in one sequence.", answer: "F", explanation: "Row order is also not significant in relational theory.", category: "design", difficulty: 2 },
+            { id: 54, text: "All values that appear in a column of a relation must be taken from the same domain.", answer: "T", explanation: "This is the domain integrity constraint.", category: "design", difficulty: 1 },
+            { id: 55, text: "View integration is the process of merging relations together.", answer: "F", explanation: "View integration merges user views, not necessarily relations.", category: "design", difficulty: 3 },
+            { id: 56, text: "A synonym is an attribute that may have more than one meaning.", answer: "F", explanation: "A synonym is different names for the same concept, not multiple meanings.", category: "design", difficulty: 2 },
+            { id: 57, text: "When two or more attributes describe the same characteristic of an entity, they are synonyms.", answer: "F", explanation: "They are homonyms if same name, synonyms if different names for same thing.", category: "design", difficulty: 3 },
+            { id: 58, text: "CASE tools can model more complex data relationships, such as ternary relationships.", answer: "T", explanation: "Modern CASE tools support complex relationship modeling.", category: "design", difficulty: 2 },
+            { id: 59, text: "When a regular entity type contains a multivalued attribute, two new relations are created.", answer: "T", explanation: "Multivalued attributes require separate relations in normalization.", category: "design", difficulty: 3 },
+            // الصفحة 3
+            { id: 60, text: "Requirements for response time, data security, backup and recovery are all requirements for physical design.", answer: "T", explanation: "These are non-functional requirements addressed in physical design.", category: "physical", difficulty: 1 },
+            { id: 61, text: "One decision in the physical design process is selecting structures.", answer: "T", explanation: "Physical design involves choosing storage structures and access methods.", category: "physical", difficulty: 1 },
+            { id: 62, text: "The logical database design always forms the best foundation for grouping attributes in the physical design.", answer: "T", explanation: "Logical design provides the blueprint for physical implementation.", category: "physical", difficulty: 2 },
+            { id: 63, text: "Efficient database structures will be beneficial only if queries and the underlying database management system are tuned to properly use the structures.", answer: "T", explanation: "Performance depends on both design and implementation tuning.", category: "physical", difficulty: 2 },
+            { id: 64, text: "Adding notations to the EER diagram regarding data volumes and usage is of no value to the physical design process.", answer: "F", explanation: "Usage information is critical for physical design decisions.", category: "physical", difficulty: 2 },
+            { id: 65, text: "The smallest unit of named application data is a record.", answer: "F", explanation: "The smallest unit is a field or attribute.", category: "physical", difficulty: 1 },
+            { id: 66, text: "Security is one advantage of partitioning.", answer: "T", explanation: "Partitioning can enhance security by isolating sensitive data.", category: "physical", difficulty: 2 },
+            { id: 67, text: "Reduced uptime is a disadvantage of partitioning.", answer: "T", explanation: "Partitioning can increase complexity and potential downtime.", category: "physical", difficulty: 2 },
+            { id: 68, text: "Hash partitioning spreads data evenly across partitions independent of any partition key value.", answer: "T", explanation: "Hash functions distribute data uniformly.", category: "physical", difficulty: 3 },
+            { id: 69, text: "Free range partitioning is a type of horizontal partitioning in which each partition is defined by a range of values for one or more columns in the normalized table.", answer: "T", explanation: "Range partitioning divides data based on value ranges.", category: "physical", difficulty: 3 },
+            { id: 70, text: "Vertical partitioning means distributing the columns of a table into several separate physical records.", answer: "T", explanation: "Vertical partitioning splits a table by columns.", category: "physical", difficulty: 2 },
+            { id: 71, text: "Parallel query processing speed is not significantly different from running queries in a nonparallel mode.", answer: "F", explanation: "Parallel processing can significantly improve query performance.", category: "physical", difficulty: 2 },
+            { id: 72, text: "Along with table scans, other elements of a query can be processed in parallel.", answer: "T", explanation: "Joins, sorts, and aggregations can also be parallelized.", category: "physical", difficulty: 3 },
+            { id: 73, text: "The query processor always knows the best way to process a query.", answer: "F", explanation: "Query optimizers make estimates and may not always choose optimal plans.", category: "physical", difficulty: 2 }
+        ];
+
+        const multipleChoiceQuestions = [
+            // أسئلة الاختيار من متعدد من PDF
+            { id: 74, text: "A database is an organized collection of ______ related data.", options: ["logically", "physically", "loosely", "badly"], answer: 0, explanation: "Databases organize data logically, not necessarily physically.", category: "database", difficulty: 1 },
+            { id: 75, text: "Older systems that often contain data of poor quality are called ______ systems.", options: ["controlled", "legacy", "database", "mainframe"], answer: 1, explanation: "Legacy systems often have data quality issues.", category: "database", difficulty: 1 },
+            { id: 76, text: "Program-data dependence is caused by:", options: ["file descriptions being stored in each database application.", "data descriptions being stored on a server.", "data descriptions being written into programming code.", "data cohabiting with programs."], answer: 2, explanation: "Program-data dependence occurs when data descriptions are hard-coded in programs.", category: "database", difficulty: 2 },
+            { id: 77, text: "Because applications are often developed independently in file processing systems:", options: ["the data is always non-redundant.", "unplanned duplicate data files are the rule rather than the exception.", "data can always be shared with others.", "there is a large volume of file I/O."], answer: 1, explanation: "Independent development leads to unplanned data duplication.", category: "database", difficulty: 2 },
+            { id: 78, text: "Relational databases establish the relationships between entities by means of common fields included in a file called a(n):", options: ["entity.", "relationship.", "relation.", "association."], answer: 2, explanation: "Relations (tables) use common fields to establish relationships.", category: "design", difficulty: 1 },
+            { id: 79, text: "A(n) ______ is often developed by identifying a form or report that a user needs on a regular basis.", options: ["enterprise view", "reporting document", "user view", "user snapshot"], answer: 2, explanation: "User views represent specific data requirements for forms or reports.", category: "modeling", difficulty: 1 },
+            { id: 80, text: "A graphical system used to capture the nature and relationships among data is called a(n):", options: ["XML data model.", "hypertext graphic.", "relational database", "data model."], answer: 3, explanation: "Data models capture data structure and relationships.", category: "modeling", difficulty: 1 },
+            { id: 81, text: "Data that describe the properties of other data are:", options: ["relationships.", "logical.", "physical.", "metadata."], answer: 3, explanation: "Metadata describes data properties.", category: "database", difficulty: 1 },
+            { id: 82, text: "All of the following are properties of metadata EXCEPT:", options: ["data definitions.", "processing logic.", "rules or constraints.", "data structures."], answer: 1, explanation: "Processing logic is not typically part of metadata.", category: "database", difficulty: 2 },
+            { id: 83, text: "A person, place, object, event, or concept about which the organization wishes to maintain data is called a(n):", options: ["relationship.", "object.", "attribute.", "entity."], answer: 3, explanation: "This is the definition of an entity.", category: "modeling", difficulty: 1 },
+            { id: 84, text: "______ are established between entities in a well-structured database so that the desired information can be retrieved.", options: ["Entities", "Relationships", "Lines", "Ties"], answer: 1, explanation: "Relationships enable data retrieval across entities.", category: "modeling", difficulty: 1 },
+            { id: 85, text: "All of the following are primary purposes of a database management system (DBMS) EXCEPT:", options: ["creating data.", "updating data.", "storing data.", "providing an integrated development environment."], answer: 3, explanation: "While some DBMS include IDE features, it's not a primary purpose.", category: "database", difficulty: 2 },
+            { id: 86, text: "With the database approach, data descriptions are stored in a central location known as a:", options: ["server.", "mainframe.", "PC.", "repository."], answer: 3, explanation: "Repository stores data definitions (metadata).", category: "database", difficulty: 1 },
+            { id: 87, text: "A user view is:", options: ["what a user sees when he or she looks out the window.", "a table or set of tables.", "a logical description of some portion of the database.", "a procedure stored on the server."], answer: 2, explanation: "User view describes a portion of the database relevant to a user.", category: "modeling", difficulty: 1 },
+            { id: 88, text: "Which organizational function should set database standards?", options: ["Management", "Application development", "Technical services", "Database Administration"], answer: 3, explanation: "DBA is responsible for database standards.", category: "database", difficulty: 1 },
+            { id: 89, text: "______ is a tool even non-programmers can use to access information from a database.", options: ["ODBC", "Structured query language", "ASP", "Data manipulation query language"], answer: 1, explanation: "SQL allows non-programmers to query databases.", category: "database", difficulty: 1 },
+            { id: 90, text: "Which of the following is NOT an advantage of database systems?", options: ["Redundant data", "Program-data independence", "Better data quality", "Reduced program maintenance"], answer: 0, explanation: "Redundant data is generally a disadvantage.", category: "database", difficulty: 1 },
+            { id: 91, text: "The most common source of database failures in organizations is:", options: ["lack of planning.", "inadequate budget.", "inadequate hardware.", "failure to implement a strong database administration function."], answer: 3, explanation: "Weak DBA function is a common cause of failure.", category: "database", difficulty: 2 },
+            { id: 92, text: "A rule that CANNOT be violated by database users is called a:", options: ["password.", "constraint.", "program.", "view."], answer: 1, explanation: "Constraints enforce data integrity rules.", category: "design", difficulty: 1 },
+            { id: 93, text: "In a file processing environment, descriptions for data and the logic for accessing the data are built into:", options: ["application programs.", "database descriptors.", "fields.", "records."], answer: 0, explanation: "File systems embed data logic in each application.", category: "database", difficulty: 1 },
+            { id: 94, text: "The logical representation of an organization's data is called a(n):", options: ["database model.", "entity-relationship model.", "relationship systems design.", "database entity diagram."], answer: 1, explanation: "E-R model is a logical data representation.", category: "modeling", difficulty: 1 },
+            { id: 95, text: "A good data definition will describe all of the characteristics of a data object EXCEPT:", options: ["subtleties.", "examples.", "who determines the value of the data.", "who can delete the data."], answer: 0, explanation: "Subtleties are not typically part of formal data definitions.", category: "modeling", difficulty: 2 },
+            { id: 96, text: "A fact is an association between two or more:", options: ["words.", "terms.", "facts.", "nuggets."], answer: 1, explanation: "Facts associate business terms.", category: "modeling", difficulty: 1 },
+            { id: 97, text: "Data modeling may be the most important part of the systems development process because:", options: ["data characteristics are important in the design of programs and other systems components.", "the data in a system are generally less complex than processes and play a central role in development.", "data are less stable than processes.", "it is the easiest."], answer: 0, explanation: "Data characteristics influence many system components.", category: "modeling", difficulty: 2 },
+            { id: 98, text: "The most common types of entities are:", options: ["strong entities.", "weak entities.", "associative entities.", "smush entities."], answer: 0, explanation: "Strong entities are the most common.", category: "modeling", difficulty: 1 },
+            { id: 99, text: "In an E-R diagram, there are/is ______ business rule(s) for every relationship.", options: ["two", "three", "one", "zero"], answer: 0, explanation: "Relationships typically involve two business rules (one in each direction).", category: "modeling", difficulty: 3 },
+            { id: 100, text: "Business policies and rules govern all of the following EXCEPT:", options: ["managing employees.", "creating data.", "updating data.", "removing data."], answer: 0, explanation: "Employee management is HR, not directly data governance.", category: "modeling", difficulty: 2 },
+            { id: 101, text: "A ______ defines or constrains some aspect of the business.", options: ["business constraint", "business structure", "business control", "business rule"], answer: 3, explanation: "Business rules define or constrain business aspects.", category: "modeling", difficulty: 1 },
+            { id: 102, text: "Which of the following is NOT a characteristic of a good business rule?", options: ["Declarative", "Atomic", "Inconsistent", "Expressible"], answer: 2, explanation: "Good business rules must be consistent.", category: "modeling", difficulty: 1 },
+            { id: 103, text: "Which of the following is NOT a good characteristic of a data name?", options: ["Relates to business characteristics", "Readable", "Repeatable", "Relates to a technical characteristic of the system"], answer: 3, explanation: "Data names should be business-oriented, not technical.", category: "modeling", difficulty: 1 },
+            { id: 104, text: "The property by which subtype entities possess the values of all attributes of a supertype is called:", options: ["hierarchy reception.", "class management.", "attribute inheritance.", "generalization."], answer: 2, explanation: "Subtypes inherit attributes from supertypes.", category: "modeling", difficulty: 2 },
+            { id: 105, text: "Which of the following is a generic entity type that has a relationship with one or more subtypes?", options: ["Megatype", "Supertype", "Subgroup", "Class"], answer: 1, explanation: "Supertype is a generic entity with subtypes.", category: "modeling", difficulty: 1 },
+            { id: 106, text: "An entity cluster can be formed by:", options: ["deleting a supertype and its subtype.", "combining metadata.", "combining a strong entity and its weak entities.", "deleting metadata."], answer: 2, explanation: "Entity clusters group related entities for simplicity.", category: "modeling", difficulty: 2 },
+            { id: 107, text: "Packaged data models:", options: ["are ready to use right out of the box.", "require customization.", "allow partial specialization.", "cannot be used for most applications."], answer: 1, explanation: "Packaged models typically need customization for specific needs.", category: "design", difficulty: 2 },
+            { id: 108, text: "Which of the following is true of packaged data models?", options: ["Relationships are connected to the highest-level entity type in an order that makes sense.", "All subtype/supertype relationships follow the total specialization and disjoint rules.", "No entities on the many sides of a relationship can be weak.", "All weak entities are considered strong."], answer: 0, explanation: "Packaged models organize relationships logically.", category: "design", difficulty: 3 },
+            { id: 109, text: "A generic or template data model that can be reused as a starting point for a data modeling project is called a(n):", options: ["packaged data model.", "universal data model.", "enterprise data model.", "collection data model."], answer: 1, explanation: "Universal data models are reusable templates.", category: "design", difficulty: 2 },
+            { id: 110, text: "Using a packaged data model, projects take less time and cost because:", options: ["less personnel are required.", "essential components and structures are already defined.", "there is more time taken to model the enterprise.", "packaged data models only run in Oracle."], answer: 1, explanation: "Pre-defined components accelerate development.", category: "design", difficulty: 1 },
+            { id: 111, text: "All of the following are advantages of packaged data models EXCEPT:", options: ["packaged data models can be built using proven components evolved from cumulative experiences.", "projects take less time and cost less.", "the data model is easier to evolve.", "more one-to-one relationships give the data model more flexibility."], answer: 3, explanation: "More one-to-one relationships don't necessarily increase flexibility.", category: "design", difficulty: 3 },
+            { id: 112, text: "All of the following are steps to using a packaged data model EXCEPT:", options: ["identify the parts of the data model that apply to your data modeling situation.", "utilize all business rules that come with the packaged data model.", "rename the identified data elements.", "map data to be used in packages with existing data in the current databases."], answer: 1, explanation: "Not all packaged business rules may apply to your situation.", category: "design", difficulty: 2 },
+            { id: 113, text: "When identifying the parts of the packaged data model that apply to your organization, one should first start with:", options: ["entities.", "attributes.", "primary keys.", "relationships."], answer: 0, explanation: "Start with identifying relevant entities.", category: "design", difficulty: 2 },
+            { id: 114, text: "The third step in the data modeling process with a packaged data model is:", options: ["rename identified data elements.", "rename relationships.", "map data to be used from package to data in current databases.", "interview users."], answer: 2, explanation: "Mapping data comes after identification and renaming.", category: "design", difficulty: 3 },
+            { id: 115, text: "______ database specification indicates all the parameters for data storage that are then input to database implementation.", options: ["Logical", "Physical", "Schematic", "Conceptual"], answer: 1, explanation: "Physical specifications define storage parameters.", category: "physical", difficulty: 1 },
+            { id: 116, text: "A form of database specification which maps conceptual requirements is called:", options: ["logical specifications.", "response specifications.", "security specifications.", "physical specifications."], answer: 0, explanation: "Logical specifications map conceptual to logical design.", category: "physical", difficulty: 2 },
+            { id: 117, text: "Data is represented in the form of:", options: ["data trees.", "tables.", "data notes.", "chairs."], answer: 1, explanation: "Relational databases represent data as tables.", category: "design", difficulty: 1 },
+            { id: 118, text: "A two-dimensional table of data sometimes is called a:", options: ["group.", "set.", "declaration.", "relation."], answer: 3, explanation: "Relation is the formal term for a table.", category: "design", difficulty: 1 },
+            { id: 119, text: "______ is a component of the relational data model included to specify business rules to maintain the integrity of data when they are manipulated.", options: ["Business rule constraint", "Data integrity", "Business integrity", "Data structure"], answer: 0, explanation: "Constraints enforce business rules for data integrity.", category: "design", difficulty: 2 },
+            { id: 120, text: "An attribute (or attributes) that uniquely identifies each row in a relation is called a:", options: ["column.", "foreign field.", "primary key.", "duplicate key."], answer: 2, explanation: "Primary key uniquely identifies rows.", category: "design", difficulty: 1 },
+            { id: 121, text: "An attribute in a relation of a database that serves as the primary key of another relation in the same database is called a:", options: ["link attribute.", "link key.", "foreign key.", "foreign attribute."], answer: 2, explanation: "Foreign key references primary key in another relation.", category: "design", difficulty: 1 },
+            { id: 122, text: "A primary key whose value is unique across all relations is called a(n):", options: ["global primary key.", "inter-table primary key.", "enterprise key.", "foreign global key."], answer: 2, explanation: "Enterprise key provides global uniqueness.", category: "design", difficulty: 2 },
+            { id: 123, text: "A primary key that consists of more than one attribute is called a:", options: ["foreign key.", "composite key.", "multivalued key.", "cardinal key."], answer: 1, explanation: "Composite keys use multiple attributes.", category: "design", difficulty: 1 },
+            { id: 124, text: "In the SQL language, the ______ statement is used to make table definitions.", options: ["create session", "create table", "create index", "select"], answer: 1, explanation: "CREATE TABLE defines table structure.", category: "design", difficulty: 1 },
+            { id: 125, text: "A requirement to begin designing physical files and databases is:", options: ["normalized relations.", "physical tables created.", "implementation complete.", "all datatypes determined."], answer: 0, explanation: "Physical design starts with normalized logical design.", category: "physical", difficulty: 2 },
+            { id: 126, text: "A key decision in the physical design process is:", options: ["ignoring the size of the database.", "selecting structures.", "deciding on the monitor.", "deciding the e-r diagrams."], answer: 1, explanation: "Selecting storage structures is crucial in physical design.", category: "physical", difficulty: 1 },
+            { id: 127, text: "Designing physical files requires ______ of where and when data are used in various ways.", options: ["maps", "descriptions", "keys", "hints"], answer: 1, explanation: "Usage descriptions inform physical design decisions.", category: "physical", difficulty: 2 },
+            { id: 128, text: "Database access frequencies are estimated from:", options: ["transaction volumes.", "user logins.", "security violations.", "random number generation."], answer: 0, explanation: "Transaction volumes indicate access patterns.", category: "physical", difficulty: 2 },
+            { id: 129, text: "A detailed coding scheme recognized by system software for representing organizational data is called a(n):", options: ["DBMS code.", "data type.", "SQL.", "DB layout."], answer: 1, explanation: "Data types define how data is represented and stored.", category: "physical", difficulty: 1 },
+            { id: 130, text: "All of the following are objectives when selecting a data type EXCEPT:", options: ["represent all possible values.", "improve data integrity.", "support all data manipulations.", "use a lot of storage space."], answer: 3, explanation: "Efficient storage is a goal, not excessive storage use.", category: "physical", difficulty: 2 },
+            { id: 131, text: "All of the following are valid datatypes in Oracle 11g EXCEPT:", options: ["varchar2.", "boolean.", "blob.", "number."], answer: 1, explanation: "Oracle 11g doesn't have a native BOOLEAN type.", category: "physical", difficulty: 3 },
+            { id: 132, text: "The smallest unit of application data recognized by system software is a:", options: ["field.", "row.", "data type.", "column."], answer: 0, explanation: "Field is the smallest named data unit.", category: "physical", difficulty: 1 },
+            { id: 133, text: "An appropriate datatype for one wanting a fixed-length type for last name would include:", options: ["VarChar.", "Char.", "Blob.", "Date."], answer: 1, explanation: "CHAR is fixed-length, VARCHAR is variable-length.", category: "physical", difficulty: 1 }
+        ];
+
+        // دمج جميع الأسئلة
+        let allQuestions = [...trueFalseQuestions, ...multipleChoiceQuestions];
+        
+        // حالة التطبيق
+        let currentMode = 'quiz'; // 'quiz' أو 'flashcard'
+        let currentFilter = 'all';
+        let filteredQuestions = [...allQuestions];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answeredQuestions = 0;
+        let userAnswers = {};
+        let flashcardIndex = 0;
+        let isFlashcardFlipped = false;
+
+        // فئات الأسئلة
+        const categoryMap = {
+            'database': { name: 'Database Concepts', color: 'category-database' },
+            'modeling': { name: 'Data Modeling', color: 'category-modeling' },
+            'design': { name: 'DB Design', color: 'category-design' },
+            'physical': { name: 'Physical Design', color: 'category-physical' },
+            'theory': { name: 'Theory', color: 'category-theory' }
+        };
+
+        // تهيئة الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            updateStats();
+            renderQuizQuestion();
+            setupEventListeners();
+            updateQuestionCounter();
+        }
+
+        function setupEventListeners() {
+            // تصفية الأسئلة
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    applyFilter();
+                    updateQuestionCounter();
+                });
+            });
+
+            // تغيير وضع الدراسة
+            document.getElementById('mode-quiz').addEventListener('click', function() {
+                setStudyMode('quiz');
+            });
+
+            document.getElementById('mode-flashcard').addEventListener('click', function() {
+                setStudyMode('flashcard');
+            });
+
+            // البحث
+            document.getElementById('quiz-search').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                if (searchTerm.length >= 2) {
+                    filteredQuestions = allQuestions.filter(q => 
+                        q.text.toLowerCase().includes(searchTerm) || 
+                        (q.explanation && q.explanation.toLowerCase().includes(searchTerm))
+                    );
+                    currentQuestionIndex = 0;
+                    if (currentMode === 'quiz') {
+                        renderQuizQuestion();
+                    } else {
+                        flashcardIndex = 0;
+                        renderFlashcard();
+                    }
+                    updateQuestionCounter();
+                } else if (searchTerm.length === 0) {
+                    applyFilter();
+                }
+            });
+
+            // التنقل بين البطاقات
+            document.getElementById('prev-card').addEventListener('click', showPreviousFlashcard);
+            document.getElementById('next-card').addEventListener('click', showNextFlashcard);
+            
+            // قلب البطاقة
+            document.getElementById('flashcard').addEventListener('click', flipFlashcard);
+        }
+
+        function applyFilter() {
+            switch(currentFilter) {
+                case 'all':
+                    filteredQuestions = [...allQuestions];
+                    break;
+                case 'true-false':
+                    filteredQuestions = trueFalseQuestions;
+                    break;
+                case 'multiple-choice':
+                    filteredQuestions = multipleChoiceQuestions;
+                    break;
+                case 'database':
+                    filteredQuestions = allQuestions.filter(q => q.category === 'database' || q.category === 'theory');
+                    break;
+                case 'modeling':
+                    filteredQuestions = allQuestions.filter(q => q.category === 'modeling');
+                    break;
+                case 'design':
+                    filteredQuestions = allQuestions.filter(q => q.category === 'design');
+                    break;
+                case 'physical':
+                    filteredQuestions = allQuestions.filter(q => q.category === 'physical');
+                    break;
+                default:
+                    filteredQuestions = [...allQuestions];
+            }
+            
+            currentQuestionIndex = 0;
+            flashcardIndex = 0;
+            
+            if (currentMode === 'quiz') {
+                renderQuizQuestion();
+            } else {
+                renderFlashcard();
+            }
+            
+            updateStats();
+        }
+
+        function setStudyMode(mode) {
+            currentMode = mode;
+            
+            // تحديث أزرار الوضع
+            document.getElementById('mode-quiz').classList.toggle('active', mode === 'quiz');
+            document.getElementById('mode-flashcard').classList.toggle('active', mode === 'flashcard');
+            
+            // إظهار/إخفاء المكونات
+            document.getElementById('quiz-mode').style.display = mode === 'quiz' ? 'block' : 'none';
+            document.getElementById('flashcard-mode').style.display = mode === 'flashcard' ? 'block' : 'none';
+            
+            if (mode === 'quiz') {
+                renderQuizQuestion();
+            } else {
+                isFlashcardFlipped = false;
+                renderFlashcard();
+            }
+        }
+
+        function renderQuizQuestion() {
+            if (filteredQuestions.length === 0) {
+                document.getElementById('quiz-container').innerHTML = `
+                    <div class="no-questions">
+                        <h3>No questions found</h3>
+                        <p>Try changing your filter or search term.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const question = filteredQuestions[currentQuestionIndex];
+            const questionNumber = currentQuestionIndex + 1;
+            const totalQuestions = filteredQuestions.length;
+            
+            let optionsHtml = '';
+            
+            if (question.hasOwnProperty('options')) {
+                // سؤال اختيار من متعدد
+                question.options.forEach((option, index) => {
+                    const isSelected = userAnswers[question.id] === index;
+                    optionsHtml += `
+                        <button class="quiz-option ${isSelected ? 'selected' : ''}" data-index="${index}">
+                            ${String.fromCharCode(65 + index)}) ${option}
+                        </button>
+                    `;
+                });
+            } else {
+                // سؤال صح/خطأ
+                optionsHtml = `
+                    <button class="quiz-option ${userAnswers[question.id] === 'T' ? 'selected' : ''}" data-answer="T">
+                        True
+                    </button>
+                    <button class="quiz-option ${userAnswers[question.id] === 'F' ? 'selected' : ''}" data-answer="F">
+                        False
+                    </button>
+                `;
+            }
+
+            const categoryInfo = categoryMap[question.category] || { name: 'General', color: 'category-database' };
+            
+            const questionHtml = `
+                <div class="question-header">
+                    <div class="question-meta">
+                        <span class="category-tag ${categoryInfo.color}">${categoryInfo.name}</span>
+                        <div class="difficulty">
+                            ${Array.from({length: 3}).map((_, i) => 
+                                `<span class="difficulty-dot ${i < question.difficulty ? 'active' : ''}"></span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    <h2 class="question-title">Question ${questionNumber} of ${totalQuestions}</h2>
+                </div>
+                
+                <div class="question-text">${question.text}</div>
+                
+                <div class="options-container">
+                    ${optionsHtml}
+                </div>
+                
+                <div class="question-actions">
+                    <button id="submit-answer" class="action-btn primary">Submit Answer</button>
+                    <button id="show-explanation" class="action-btn secondary">Show Explanation</button>
+                    <div class="nav-buttons">
+                        <button id="prev-question" class="nav-btn" ${currentQuestionIndex === 0 ? 'disabled' : ''}>
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button id="next-question" class="nav-btn" ${currentQuestionIndex === filteredQuestions.length - 1 ? 'disabled' : ''}>
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('quiz-container').innerHTML = questionHtml;
+            
+            // إضافة مستمعي الأحداث للخيارات
+            document.querySelectorAll('.quiz-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    
+                    const question = filteredQuestions[currentQuestionIndex];
+                    if (question.hasOwnProperty('options')) {
+                        userAnswers[question.id] = parseInt(this.dataset.index);
+                    } else {
+                        userAnswers[question.id] = this.dataset.answer;
+                    }
+                });
+            });
+            
+            // إضافة مستمعي الأحداث للأزرار
+            document.getElementById('submit-answer')?.addEventListener('click', submitAnswer);
+            document.getElementById('show-explanation')?.addEventListener('click', showExplanation);
+            document.getElementById('prev-question')?.addEventListener('click', showPreviousQuestion);
+            document.getElementById('next-question')?.addEventListener('click', showNextQuestion);
+            
+            // إخفاء مربع الشرح عند تغيير السؤال
+            document.getElementById('explanation-box').innerHTML = '';
+            document.getElementById('feedback-message').innerHTML = '';
+            
+            // تحديث عداد التقدم
+            updateProgressBar();
+        }
+
+        function renderFlashcard() {
+            if (filteredQuestions.length === 0) {
+                document.getElementById('flashcard').innerHTML = `
+                    <div class="flashcard-front">
+                        <div class="no-questions">No questions found</div>
+                    </div>
+                    <div class="flashcard-back">
+                        <div class="no-questions">Try changing your filter</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const question = filteredQuestions[flashcardIndex];
+            const categoryInfo = categoryMap[question.category] || { name: 'General', color: 'category-database' };
+            
+            // تحديث واجهة البطاقة
+            document.getElementById('flashcard-category').className = `category-tag ${categoryInfo.color}`;
+            document.getElementById('flashcard-category').textContent = categoryInfo.name;
+            
+            // تحديث مستوى الصعوبة
+            const difficultyHtml = Array.from({length: 3}).map((_, i) => 
+                `<span class="difficulty-dot ${i < question.difficulty ? 'active' : ''}"></span>`
+            ).join('');
+            document.getElementById('flashcard-difficulty').innerHTML = difficultyHtml;
+            
+            // تحديث نص السؤال
+            document.getElementById('flashcard-question-text').textContent = question.text;
+            
+            // تحديث الجواب والشرح
+            let answerText = '';
+            if (question.hasOwnProperty('options')) {
+                answerText = `Answer: ${String.fromCharCode(65 + question.answer)}. ${question.options[question.answer]}`;
+            } else {
+                answerText = `Answer: ${question.answer === 'T' ? 'True' : 'False'}`;
+            }
+            
+            document.getElementById('flashcard-answer').textContent = answerText;
+            document.getElementById('flashcard-explanation').textContent = question.explanation || 'No explanation available.';
+            
+            // تحديث العداد
+            document.getElementById('flashcard-counter').textContent = `Card ${flashcardIndex + 1} of ${filteredQuestions.length}`;
+            
+            // إعادة ضبط حالة القلب
+            const flashcard = document.getElementById('flashcard');
+            if (isFlashcardFlipped) {
+                flashcard.classList.add('flipped');
+            } else {
+                flashcard.classList.remove('flipped');
+            }
+            
+            // تحديث أزرار التنقل
+            document.getElementById('prev-card').disabled = flashcardIndex === 0;
+            document.getElementById('next-card').disabled = flashcardIndex === filteredQuestions.length - 1;
+        }
+
+        function flipFlashcard() {
+            const flashcard = document.getElementById('flashcard');
+            flashcard.classList.toggle('flipped');
+            isFlashcardFlipped = !isFlashcardFlipped;
+        }
+
+        function showPreviousFlashcard() {
+            if (flashcardIndex > 0) {
+                flashcardIndex--;
+                isFlashcardFlipped = false;
+                renderFlashcard();
+            }
+        }
+
+        function showNextFlashcard() {
+            if (flashcardIndex < filteredQuestions.length - 1) {
+                flashcardIndex++;
+                isFlashcardFlipped = false;
+                renderFlashcard();
+            }
+        }
+
+        function submitAnswer() {
+            const question = filteredQuestions[currentQuestionIndex];
+            const selectedOption = document.querySelector('.quiz-option.selected');
+            
+            if (!selectedOption) {
+                showFeedback('Please select an answer first!', 'error');
+                return;
+            }
+            
+            let isCorrect = false;
+            let userAnswer;
+            
+            if (question.hasOwnProperty('options')) {
+                userAnswer = parseInt(selectedOption.dataset.index);
+                isCorrect = userAnswer === question.answer;
+            } else {
+                userAnswer = selectedOption.dataset.answer;
+                isCorrect = userAnswer === question.answer;
+            }
+            
+            // تخزين الإجابة
+            userAnswers[question.id] = userAnswer;
+            answeredQuestions++;
+            
+            // تحديث النتيجة
+            if (isCorrect) {
+                score++;
+                showFeedback('Correct! Well done! 🎉', 'success');
+                if (score % 5 === 0) {
+                    triggerConfetti();
+                }
+            } else {
+                let correctAnswer;
+                if (question.hasOwnProperty('options')) {
+                    correctAnswer = `${String.fromCharCode(65 + question.answer)}. ${question.options[question.answer]}`;
+                } else {
+                    correctAnswer = question.answer === 'T' ? 'True' : 'False';
+                }
+                showFeedback(`Incorrect. The correct answer is: ${correctAnswer}`, 'error');
+            }
+            
+            // تحديث الإحصائيات
+            updateStats();
+            
+            // تعطيل الخيارات بعد الإجابة
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.disabled = true;
+                if (question.hasOwnProperty('options')) {
+                    if (parseInt(opt.dataset.index) === question.answer) {
+                        opt.classList.add('correct');
+                    } else if (opt.classList.contains('selected') && parseInt(opt.dataset.index) !== question.answer) {
+                        opt.classList.add('incorrect');
+                    }
+                } else {
+                    if (opt.dataset.answer === question.answer) {
+                        opt.classList.add('correct');
+                    } else if (opt.classList.contains('selected') && opt.dataset.answer !== question.answer) {
+                        opt.classList.add('incorrect');
+                    }
+                }
+            });
+            
+            // إخفاء زر الإرسال
+            document.getElementById('submit-answer').style.display = 'none';
+        }
+
+        function showExplanation() {
+            const question = filteredQuestions[currentQuestionIndex];
+            const explanationHtml = `
+                <div class="explanation-header">
+                    <h3>Explanation</h3>
+                    <span class="category-tag ${categoryMap[question.category]?.color || 'category-database'}">
+                        ${categoryMap[question.category]?.name || 'General'}
+                    </span>
+                </div>
+                <div class="explanation-content">
+                    <p>${question.explanation || 'No explanation available for this question.'}</p>
+                </div>
+            `;
+            
+            document.getElementById('explanation-box').innerHTML = explanationHtml;
+        }
+
+        function showPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuizQuestion();
+            }
+        }
+
+        function showNextQuestion() {
+            if (currentQuestionIndex < filteredQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderQuizQuestion();
+            }
+        }
+
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback-message');
+            feedback.textContent = message;
+            feedback.className = `feedback-message ${type}`;
+            feedback.style.display = 'block';
+            
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 3000);
+        }
+
+        function updateStats() {
+            // تحديث الإحصائيات العامة
+            document.getElementById('score').textContent = score;
+            document.getElementById('current-index').textContent = currentQuestionIndex + 1;
+            document.getElementById('total').textContent = filteredQuestions.length;
+            
+            // تحديث إحصائيات سريعة
+            document.getElementById('total-questions').textContent = allQuestions.length;
+            document.getElementById('answered-questions').textContent = answeredQuestions;
+            
+            const correctRate = answeredQuestions > 0 ? Math.round((score / answeredQuestions) * 100) : 0;
+            document.getElementById('correct-rate').textContent = `${correctRate}%`;
+            
+            const currentCategory = document.querySelector('.filter-btn.active').textContent;
+            document.getElementById('current-category').textContent = currentCategory;
+            
+            // تحديث شريط التقدم
+            updateProgressBar();
+        }
+
+        function updateProgressBar() {
+            const progress = filteredQuestions.length > 0 ? 
+                ((currentQuestionIndex + 1) / filteredQuestions.length) * 100 : 0;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        function updateQuestionCounter() {
+            // يمكن إضافة عداد هنا إذا لزم الأمر
+        }
+
+        function triggerConfetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+    </script>
+</body>
 </html>
